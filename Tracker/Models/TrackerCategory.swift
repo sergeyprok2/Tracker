@@ -4,7 +4,7 @@
 //
 //
 
-import UIKit
+import Foundation
 
 public struct TrackerCategory {
     let title: String

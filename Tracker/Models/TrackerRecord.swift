@@ -4,9 +4,9 @@
 //
 //
 
-import UIKit
+import Foundation
 
-public struct TrackerRecord {
+public struct TrackerRecord: Hashable {  // Hashable для быстрой работы с Set
     let trackerId: UUID
     let date: Date
 }

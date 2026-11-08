@@ -60,17 +60,15 @@ final class TrackerCell: UICollectionViewCell {
     }()
     
     private lazy var actionButton: UIButton = {
-        // Используем .custom, чтобы UIKit вообще не лез в цвета и не пытался ничего перекрашивать
-        let button = UIButton(type: .custom)
-        
-        // Загружаем картинку из Ассетов
-        let image = UIImage(named: "Plus")
-        button.setImage(image, for: .normal)
-        
+        let button = UIButton(type: .system) // .system позволяет красить иконку через tintColor
+        button.tintColor = UIColor(named: "White [day]") ?? .white // белый цвет значка + и галочки
+        button.layer.cornerRadius = 17 // половина от 34, чтобы кнопка была ровным кругом
+        button.layer.masksToBounds = true // обрезаем края по кругу
         button.addTarget(self, action: #selector(didTapButton), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
+
     
     // Инициализатор для создания ячейки в коде
     override init(frame: CGRect) {
@@ -82,7 +80,7 @@ final class TrackerCell: UICollectionViewCell {
     
     // Обязательный инициализатор для работы со сторибордами (требует компилятор)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     /// Метод вызывается при нажатии на кнопку выполнения трекера
@@ -135,18 +133,36 @@ final class TrackerCell: UICollectionViewCell {
     
     /// Конфигурация ячейки данными трекера и его текущим состоянием
     func configure(with tracker: Tracker, isCompleted: Bool, completedDays: Int) {
-        // Устанавливаем текст, эмодзи и цвета из объекта tracker
         textCard.text = tracker.name
         emodjCard.text = tracker.emoji
+        cardView.backgroundColor = tracker.color
         
-        // Устанавливаем количество пройденных дней
-        textDay.text = "\(completedDays) дней"
+        // правильное склонение слова «день / дня / дней» (1 день, 2 дня, 5 дней)
+        textDay.text = formatDaysText(completedDays)
         
-        // Меняем иконку кнопки в зависимости от того, выполнен трекер или нет
-        let buttonImageName = isCompleted ? "Checkmark" : "Plus"
-        actionButton.setImage(UIImage(named: buttonImageName), for: .normal)
+        // ставим системный плюс или галочку и красим фон кнопки в цвет карточки
+        let pointSize = UIImage.SymbolConfiguration(pointSize: 11, weight: .bold)
+        let imageName = isCompleted ? "checkmark" : "plus"
+        let image = UIImage(systemName: imageName, withConfiguration: pointSize)
+        actionButton.setImage(image, for: .normal)
+        actionButton.backgroundColor = tracker.color
         
-        // Делаем кнопку чуть полупрозрачной, если трекер выполнен
-        actionButton.alpha = isCompleted ? 0.5 : 1.0
+        // Делаем кнопку чуть полупрозрачной, если трекер выполнен (по макету 0.3)
+        actionButton.alpha = isCompleted ? 0.3 : 1.0 // ИЗМЕНЕНО: прозрачность по макету
     }
+    
+    // функция для правильного склонения (0 дней, 1 день, 2 дня, 5 дней) — как на макете!
+    private func formatDaysText(_ count: Int) -> String {
+        let remainder100 = count % 100
+        let remainder10 = count % 10
+        if remainder100 >= 11 && remainder100 <= 14 {
+            return "\(count) дней"
+        }
+        switch remainder10 {
+        case 1: return "\(count) день"
+        case 2, 3, 4: return "\(count) дня"
+        default: return "\(count) дней"
+        }
+    }
+
 }

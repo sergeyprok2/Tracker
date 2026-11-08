@@ -15,13 +15,26 @@ final class ScheduleViewController: UIViewController {
     
     // Замыкание (closure) для передачи выбранного массива дней обратно на экран создания привычки
     var onScheduleSelected: (([WeekDay]) -> Void)?
+    
+    // принимаем уже выбранные дни, чтобы переключатели не сбрасывались при повторном входе
+    init(selectedDays: [WeekDay] = []) {
+        super.init(nibName: nil, bundle: nil)
+        for day in selectedDays {
+            self.selectedDays[day] = true
+        }
+    }
+    
+    // обязательный инициализатор при добавлении своего init
+    required init?(coder: NSCoder) {
+        nil
+    }
 
     // MARK: - UI Elements (Создание графических элементов)
     
     // Общий скругленный контейнер-подложка для всей таблицы с днями недели
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor(named: "YP Background") ?? UIColor(red: 230/255, green: 232/255, blue: 235/255, alpha: 0.3)
+        view.backgroundColor = .backgroundDay
         view.layer.cornerRadius = 16
         view.clipsToBounds = true
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -116,7 +129,7 @@ extension ScheduleViewController: UITableViewDataSource, UITableViewDelegate {
     
     // Количество строк в таблице соответствует количеству дней в перечислении WeekDay
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return WeekDay.allCases.count
+        WeekDay.allCases.count
     }
     
     // Конфигурация ячейки для каждого дня недели
@@ -137,7 +150,8 @@ extension ScheduleViewController: UITableViewDataSource, UITableViewDelegate {
         cell.separatorInset = indexPath.row == WeekDay.allCases.count - 1 ?
             UIEdgeInsets(top: 0, left: 0, bottom: 0, right: cell.bounds.width + 1000) :
             UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-            
+        
+        cell.selectionStyle = .none // убираем серую подсветку ячейки при нажатии
         return cell
     }
     
@@ -182,7 +196,7 @@ final class ScheduleCell: UITableViewCell {
     }
     
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     private func setupCellSubviews() {

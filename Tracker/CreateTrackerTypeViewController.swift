@@ -2,11 +2,18 @@
 //  CreateTrackerTypeViewController.swift
 //  Tracker
 //
-//
 
 import UIKit
 
+// протокол делегата для передачи созданного трекера на главный экран
+protocol TrackerCreationDelegate: AnyObject {
+    func didCreateTracker(_ tracker: Tracker, categoryTitle: String)
+}
+
 final class CreateTrackerTypeViewController: UIViewController {
+    
+    // ссылка на делегат (TrackersViewController)
+    weak var delegate: TrackerCreationDelegate?
     
     private lazy var habitButton: UIButton = {
         let button = UIButton()
@@ -36,47 +43,29 @@ final class CreateTrackerTypeViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .white
         
-        // Установка нативного заголовка навигационной панели
         title = "Создание трекера"
         navigationController?.navigationBar.prefersLargeTitles = false
-        // Полностью убирает кнопку «Назад» и стрелочку слева
         navigationItem.hidesBackButton = true
         setupSubviews()
         setupConstraints()
     }
     
     @objc private func didTapHabitButton() {
-        dismiss(animated: true) {
-            let createTrackerVC = CreateTrackerViewController()
-            
-            // Оборачиваем в UINavigationController, чтобы работал заголовок сверху
-            let navController = UINavigationController(rootViewController: createTrackerVC)
-            navController.modalPresentationStyle = .pageSheet
-            
-            // Находим текущий экран и презентуем шторку
-            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                  let topController = windowScene.windows.first?.rootViewController else {
-                return
-            }
-            topController.present(navController, animated: true)
-        }
+        // открываем экран привычки и передаём ему наш delegate
+        let createTrackerVC = CreateTrackerViewController()
+        createTrackerVC.delegate = delegate
+        let navController = UINavigationController(rootViewController: createTrackerVC)
+        navController.modalPresentationStyle = .pageSheet
+        present(navController, animated: true)
     }
     
     @objc private func didTapEventButton() {
-        dismiss(animated: true) {
-            let createEventVC = CreateEventViewController()
-            
-            // Оборачиваем в UINavigationController, чтобы работал заголовок сверху
-            let navController = UINavigationController(rootViewController: createEventVC)
-            navController.modalPresentationStyle = .pageSheet
-            
-            // Находим текущий экран и презентуем шторку
-            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                  let topController = windowScene.windows.first?.rootViewController else {
-                return
-            }
-            topController.present(navController, animated: true)
-        }
+        // открываем экран нерегулярного события и передаём ему наш delegate
+        let createEventVC = CreateEventViewController()
+        createEventVC.delegate = delegate
+        let navController = UINavigationController(rootViewController: createEventVC)
+        navController.modalPresentationStyle = .pageSheet
+        present(navController, animated: true)
     }
 
     // MARK: - Setup Layout (Добавление подпредставлений)
@@ -102,3 +91,4 @@ final class CreateTrackerTypeViewController: UIViewController {
         ])
     }
 }
+
