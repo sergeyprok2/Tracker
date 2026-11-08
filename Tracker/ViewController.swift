@@ -2,7 +2,6 @@
 //  ViewController.swift
 //  Tracker
 //
-//  Created by Сергей Иванов on 01.11.2026.
 //
 
 import UIKit
