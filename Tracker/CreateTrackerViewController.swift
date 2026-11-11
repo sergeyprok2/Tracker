@@ -5,7 +5,7 @@
 
 import UIKit
 
-final class CreateTrackerViewController: UIViewController {
+final class CreateTrackerViewController: UIViewController, EmojiCollectionViewDelegate, ColorCollectionViewDelegate {
 
     // MARK: - Properties
 
@@ -19,6 +19,17 @@ final class CreateTrackerViewController: UIViewController {
     private var selectedSchedule: [WeekDay] = [] {
         didSet {
             updateScheduleButtonTitle()
+            updateCreateButtonState()
+        }
+    }
+    
+    private var selectedEmoji: String? {
+        didSet {
+            updateCreateButtonState()
+        }
+    }
+    private var selectedColor: UIColor? {
+        didSet {
             updateCreateButtonState()
         }
     }
@@ -158,6 +169,32 @@ final class CreateTrackerViewController: UIViewController {
         button.addTarget(self, action: #selector(didTapCreateButton), for: .touchUpInside)
         return button
     }()
+    
+    private lazy var scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        return scrollView
+    }()
+    
+    private lazy var contentView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private lazy var emojiCollectionView: EmojiCollectionView = {
+        let emojiView = EmojiCollectionView()
+        emojiView.delegate = self
+        emojiView.translatesAutoresizingMaskIntoConstraints = false
+        return emojiView
+    }()
+    
+    private lazy var colorCollectionView: ColorCollectionView = {
+        let colorView = ColorCollectionView()
+        colorView.delegate = self
+        colorView.translatesAutoresizingMaskIntoConstraints = false
+        return colorView
+    }()
 
     // MARK: - Lifecycle (Жизненный цикл контроллера)
     
@@ -176,14 +213,20 @@ final class CreateTrackerViewController: UIViewController {
     // MARK: - Setup Layout (Добавление подпредставлений)
     
     private func setupSubviews() {
-        view.addSubview(textField)
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentView)
         
-        view.addSubview(optionsContainerView)
+        contentView.addSubview(textField)
+        
+        contentView.addSubview(optionsContainerView)
         optionsContainerView.addSubview(categoryButton)
         optionsContainerView.addSubview(separatorView)
         optionsContainerView.addSubview(scheduleButton)
         
-        view.addSubview(buttonsStackView)
+        contentView.addSubview(emojiCollectionView)
+        contentView.addSubview(colorCollectionView)
+        
+        contentView.addSubview(buttonsStackView)
         buttonsStackView.addArrangedSubview(cancelButton)
         buttonsStackView.addArrangedSubview(createButton)
     }
@@ -192,14 +235,25 @@ final class CreateTrackerViewController: UIViewController {
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            textField.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24),
-            textField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            textField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            
+            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
+            
+            textField.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 24),
+            textField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            textField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             textField.heightAnchor.constraint(equalToConstant: 75),
             
             optionsContainerView.topAnchor.constraint(equalTo: textField.bottomAnchor, constant: 24),
-            optionsContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            optionsContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            optionsContainerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            optionsContainerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             optionsContainerView.heightAnchor.constraint(equalToConstant: 150),
             
             categoryButton.topAnchor.constraint(equalTo: optionsContainerView.topAnchor),
@@ -217,9 +271,20 @@ final class CreateTrackerViewController: UIViewController {
             scheduleButton.trailingAnchor.constraint(equalTo: optionsContainerView.trailingAnchor),
             scheduleButton.heightAnchor.constraint(equalToConstant: 75),
             
-            buttonsStackView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -24),
-            buttonsStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            buttonsStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            emojiCollectionView.topAnchor.constraint(equalTo: optionsContainerView.bottomAnchor, constant: 32),
+            emojiCollectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            emojiCollectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            emojiCollectionView.heightAnchor.constraint(equalToConstant: 224),
+            
+            colorCollectionView.topAnchor.constraint(equalTo: emojiCollectionView.bottomAnchor, constant: 16),
+            colorCollectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            colorCollectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            colorCollectionView.heightAnchor.constraint(equalToConstant: 224),
+            
+            buttonsStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -24),
+            buttonsStackView.topAnchor.constraint(equalTo: colorCollectionView.bottomAnchor, constant: 16),
+            buttonsStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            buttonsStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             buttonsStackView.heightAnchor.constraint(equalToConstant: 60)
         ])
     }
@@ -229,7 +294,7 @@ final class CreateTrackerViewController: UIViewController {
     // проверяем, введено ли название и выбрано ли расписание
     private func updateCreateButtonState() {
         let name = (textField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        let isValid = !name.isEmpty && !selectedSchedule.isEmpty
+        let isValid = !name.isEmpty && !selectedSchedule.isEmpty && selectedEmoji != nil && selectedColor != nil
         createButton.isEnabled = isValid
         createButton.backgroundColor = isValid ? (UIColor(named: "Black [day]") ?? .black) : .gray
     }
@@ -286,17 +351,26 @@ final class CreateTrackerViewController: UIViewController {
     
     @objc private func didTapCreateButton() {
         guard let name = textField.text?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty else { return }
+        guard let selectedEmoji, let selectedColor else { return }
         
         let newTracker = Tracker(
             id: UUID(),
             name: name,
-            color: UIColor(named: "Color selection 5") ?? .systemGreen,
-            emoji: "❤️",
+            color: selectedColor,
+            emoji: selectedEmoji,
             schedule: selectedSchedule
         )
         
         delegate?.didCreateTracker(newTracker, categoryTitle: defaultCategoryTitle) // передаём трекер через делегат
         view.window?.rootViewController?.dismiss(animated: true) // закрываем оба модальных окна
+    }
+    
+    func didSelectEmoji(_ emoji: String) {
+        selectedEmoji = emoji
+    }
+    
+    func didSelectColor(_ color: UIColor) {
+        selectedColor = color
     }
 
 }
@@ -316,4 +390,6 @@ extension CreateTrackerViewController: UITextFieldDelegate {
         return updatedText.count <= 38
     }
 }
+
+
 
