@@ -2,10 +2,10 @@
 //  Tracker.swift
 //  Tracker
 //
-//
 
 import UIKit
 
+/// Перечисление дней недели (от понедельника до воскресенья) для настройки расписания привычек
 enum WeekDay: Int, Codable, CaseIterable {
     case monday = 1
     case tuesday
@@ -14,7 +14,9 @@ enum WeekDay: Int, Codable, CaseIterable {
     case friday
     case saturday
     case sunday
-    
+
+    // MARK: - Properties
+
     // Русское название дня недели прямо в модели
     public var stringValue: String {
         switch self {
@@ -27,8 +29,10 @@ enum WeekDay: Int, Codable, CaseIterable {
         case .sunday: "Воскресенье"
         }
     }
-    
-    // переводим системный номер дня недели (где 1 — воскресенье) в наш WeekDay (где 1 — понедельник).
+
+    // MARK: - Public Methods
+
+    // Переводим системный номер дня недели (где 1 — воскресенье) в наш WeekDay (где 1 — понедельник).
     static func from(date: Date) -> WeekDay? {
         let systemWeekday = Calendar.current.component(.weekday, from: date)
         let convertedIndex = systemWeekday == 1 ? 7 : systemWeekday - 1
@@ -36,6 +40,7 @@ enum WeekDay: Int, Codable, CaseIterable {
     }
 }
 
+/// Основная модель трекера (привычки или нерегулярного события): хранит уникальный id, имя, цвет, эмодзи и расписание
 public struct Tracker {
     let id: UUID
     let name: String
