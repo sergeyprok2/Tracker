@@ -1,11 +1,12 @@
-
+//
+//  TabBarController.swift
+//  Tracker
+//
 
 import UIKit
 
-// MARK: - TabBarController
-
+/// Корневой контроллер нижней панели вкладок (Tab Bar): объединяет вкладки «Трекеры» и «Статистика»
 final class TabBarController: UITabBarController {
-
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
@@ -23,7 +24,7 @@ final class TabBarController: UITabBarController {
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = .white
 
-        // ИЗМЕНЕНО: серый цвет для неактивной вкладки и синий для активной
+        // Серый цвет для неактивной вкладки и синий для активной
         let normalColor = UIColor(named: "Gray [day]") ?? UIColor(named: "Gray1") ?? .systemGray
         let selectedColor = UIColor(named: "Blue [day]") ?? UIColor(named: "Blue1") ?? .systemBlue
 
@@ -76,7 +77,4 @@ final class TabBarController: UITabBarController {
 
         self.viewControllers = [trackersNavigationController, statisticsNavigationController]
     }
-
-
 }
-

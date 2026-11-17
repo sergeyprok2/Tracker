@@ -1,36 +1,24 @@
 //
 //  ScheduleViewController.swift
 //  Tracker
-
 //
 
 import UIKit
 
+/// Экран выбора расписания для привычки: показывает список из 7 дней недели с переключателями UISwitch и кнопку «Готово»
 final class ScheduleViewController: UIViewController {
+    // MARK: - Properties
 
-    // MARK: - Properties (Свойства и данные экрана)
-    
-    // Словарь для отслеживания состояния переключателей (выбран день или нет)
-    private var selectedDays: [WeekDay: Bool] = [:]
-    
     // Замыкание (closure) для передачи выбранного массива дней обратно на экран создания привычки
     var onScheduleSelected: (([WeekDay]) -> Void)?
-    
-    // принимаем уже выбранные дни, чтобы переключатели не сбрасывались при повторном входе
-    init(selectedDays: [WeekDay] = []) {
-        super.init(nibName: nil, bundle: nil)
-        for day in selectedDays {
-            self.selectedDays[day] = true
-        }
-    }
-    
-    // обязательный инициализатор при добавлении своего init
-    required init?(coder: NSCoder) {
-        nil
-    }
 
-    // MARK: - UI Elements (Создание графических элементов)
-    
+    // MARK: - Private Properties
+
+    // Словарь для отслеживания состояния переключателей (выбран день или нет)
+    private var selectedDays: [WeekDay: Bool] = [:]
+
+    // MARK: - UI Components
+
     // Общий скругленный контейнер-подложка для всей таблицы с днями недели
     private let containerView: UIView = {
         let view = UIView()
@@ -40,7 +28,7 @@ final class ScheduleViewController: UIViewController {
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
-    
+
     // Таблица для отображения списка дней недели
     private lazy var tableView: UITableView = {
         let table = UITableView(frame: .zero, style: .plain)
@@ -53,7 +41,7 @@ final class ScheduleViewController: UIViewController {
         table.translatesAutoresizingMaskIntoConstraints = false
         return table
     }()
-    
+
     // Кнопка «Готово» в нижней части экрана для подтверждения выбора
     private lazy var doneButton: UIButton = {
         let button = UIButton(type: .system)
@@ -67,28 +55,45 @@ final class ScheduleViewController: UIViewController {
         return button
     }()
 
-    // MARK: - Lifecycle (Жизненный цикл контроллера)
-    
+    // MARK: - Initialization
+
+    // Принимаем уже выбранные дни, чтобы переключатели не сбрасывались при повторном входе
+    init(selectedDays: [WeekDay] = []) {
+        super.init(nibName: nil, bundle: nil)
+        for day in selectedDays {
+            self.selectedDays[day] = true
+        }
+    }
+
+    // Обязательный инициализатор при добавлении своего init
+    required init?(coder: NSCoder) {
+        nil
+    }
+
+    // MARK: - Lifecycle
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
-        
+
         // Установка нативного заголовка в Navigation Bar
         title = "Расписание"
         navigationController?.navigationBar.prefersLargeTitles = false
-        
+
         setupSubviews()
         setupConstraints()
     }
 
-    // MARK: - Setup Layout (Настройка иерархии и констрейнтов)
-    
+    // MARK: - Private Methods
+
+    // Добавление контейнера таблицы и кнопки на экран
     private func setupSubviews() {
         view.addSubview(containerView)
         containerView.addSubview(tableView)
         view.addSubview(doneButton)
     }
-    
+
+    // Настройка констрейнтов элементов экрана расписания
     private func setupConstraints() {
         NSLayoutConstraint.activate([
             // Контейнер с таблицей дней недели под навигационным баром
@@ -96,13 +101,13 @@ final class ScheduleViewController: UIViewController {
             containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             containerView.heightAnchor.constraint(equalToConstant: 75 * 7), // 7 ячеек по 75 пунктов высоты
-            
+
             // Таблица заполняет весь контейнер целиком
             tableView.topAnchor.constraint(equalTo: containerView.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-            
+
             // Нижняя кнопка «Готово» с привязкой к безопасной зоне экрана
             doneButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -24),
             doneButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
@@ -111,64 +116,68 @@ final class ScheduleViewController: UIViewController {
         ])
     }
 
-    // MARK: - Actions (Обработчики нажатий)
-    
     @objc private func didTapDoneButton() {
         // Фильтруем и собираем только те дни недели, у которых переключатель в положении true
         let activeDays = WeekDay.allCases.filter { selectedDays[$0] == true }
-        
+
         // Передаем выбранный массив дней через замыкание назад и закрываем модальное окно
         onScheduleSelected?(activeDays)
         dismiss(animated: true)
     }
 }
 
-// MARK: - UITableViewDataSource, UITableViewDelegate (Настройка таблицы дней недели)
+// MARK: - UITableViewDataSource, UITableViewDelegate
 
 extension ScheduleViewController: UITableViewDataSource, UITableViewDelegate {
-    
     // Количество строк в таблице соответствует количеству дней в перечислении WeekDay
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         WeekDay.allCases.count
     }
-    
+
     // Конфигурация ячейки для каждого дня недели
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: ScheduleCell.identifier, for: indexPath) as? ScheduleCell else {
             return UITableViewCell()
         }
-        
+
         let day = WeekDay.allCases[indexPath.row]
         let isOn = selectedDays[day] ?? false
-        
+
         // Настраиваем ячейку и передаем замыкание отслеживания свитча
         cell.configure(with: day.stringValue, isOn: isOn) { [weak self] isSwitchOn in
             self?.selectedDays[day] = isSwitchOn
         }
-        
+
         // Убираем разделительную линию у самой нижней ячейки контейнера
         cell.separatorInset = indexPath.row == WeekDay.allCases.count - 1 ?
             UIEdgeInsets(top: 0, left: 0, bottom: 0, right: cell.bounds.width + 1000) :
             UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-        
+
         cell.selectionStyle = .none // убираем серую подсветку ячейки при нажатии
         return cell
     }
-    
+
     // Фиксированная высота каждой строки таблицы
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 75
     }
 }
 
-// MARK: - ScheduleCell (Кастомная ячейка дня недели с переключателем UISwitch)
+// MARK: - ScheduleCell
 
+/// Кастомная ячейка таблицы расписания: содержит название дня недели слева и переключатель UISwitch справа
 final class ScheduleCell: UITableViewCell {
+    // MARK: - Properties
+
     static let identifier = "ScheduleCell"
-    
+
+    // MARK: - Private Properties
+
     // Замыкание для передачи состояния свитча наружу в контроллер
     private var switchChangedAction: ((Bool) -> Void)?
-    
+
+    // MARK: - UI Components
+
     // Текстовая метка с названием дня недели
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -177,7 +186,7 @@ final class ScheduleCell: UITableViewCell {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
-    
+
     // Интерактивный переключатель UISwitch на правом крае ячейки
     private lazy var daySwitch: UISwitch = {
         let switcher = UISwitch()
@@ -186,7 +195,9 @@ final class ScheduleCell: UITableViewCell {
         switcher.translatesAutoresizingMaskIntoConstraints = false
         return switcher
     }()
-    
+
+    // MARK: - Initialization
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         contentView.backgroundColor = .clear
@@ -194,33 +205,39 @@ final class ScheduleCell: UITableViewCell {
         setupCellSubviews()
         setupCellConstraints()
     }
-    
+
     required init?(coder: NSCoder) {
         nil
     }
-    
-    private func setupCellSubviews() {
-        contentView.addSubview(titleLabel)
-        contentView.addSubview(daySwitch)
-    }
-    
-    private func setupCellConstraints() {
-        NSLayoutConstraint.activate([
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            titleLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            
-            daySwitch.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            daySwitch.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
-        ])
-    }
-    
+
+    // MARK: - Public Methods
+
     // Метод внешнего наполнения ячейки данными
     func configure(with title: String, isOn: Bool, action: @escaping (Bool) -> Void) {
         titleLabel.text = title
         daySwitch.isOn = isOn
         switchChangedAction = action
     }
-    
+
+    // MARK: - Private Methods
+
+    // Добавление метки и переключателя в ячейку
+    private func setupCellSubviews() {
+        contentView.addSubview(titleLabel)
+        contentView.addSubview(daySwitch)
+    }
+
+    // Настройка расположения элементов внутри ячейки
+    private func setupCellConstraints() {
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            titleLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+
+            daySwitch.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            daySwitch.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
+        ])
+    }
+
     // Действие при переключении тумблера
     @objc private func switchChanged(_ sender: UISwitch) {
         switchChangedAction?(sender.isOn)
